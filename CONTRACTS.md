@@ -22,8 +22,17 @@ The public CLI contract is:
 python -m harnesslab.cli list
 python -m harnesslab.cli run ch01
 python -m harnesslab.cli run all
+python -m harnesslab.cli pipeline
+python -m harnesslab.cli measure
 harnesslab run ch07 --json
 ```
+
+Reference architecture and measurement contracts (added 2026-11-11):
+
+12. The reference pipeline in `harnesslab/pipeline.py` runs one request through seven stages — model invocation, tool selection, authorization, execution, observation, state updates, termination — using only the shared core primitives, and stops at the first denial or escalation.
+13. Model adapters implement the `ModelAdapter` protocol in `harnesslab/adapters.py`. The labs ship only the deterministic `ScriptedModel`; no live model call is permitted in a lab.
+14. Extensions are admitted only through `ExtensionRegistry` in `harnesslab/extensions.py`: pinned version, human review, and a trust tier, or the load is denied.
+15. `python -m harnesslab.cli measure` reproduces the four adversarial scenarios (ch03, ch05, ch06, ch08) and reports completion, latency, and escalations; the reported numbers are measurements, not constants, and exact medians vary by machine.
 
 The public Python contract is:
 

@@ -23,6 +23,8 @@ python -m pip install -e .
 python -m harnesslab.cli list
 python -m harnesslab.cli run ch07 --json
 python -m harnesslab.cli run all
+python -m harnesslab.cli pipeline
+python -m harnesslab.cli measure
 ```
 
 The installed console command is also available:
@@ -30,11 +32,34 @@ The installed console command is also available:
 ```bash
 harnesslab list
 harnesslab run all
+harnesslab pipeline
+harnesslab measure
 ```
 
 Every chapter runner returns a `LabResult` with `chapter`, `title`, `passed`, `score`, `summary`, `decisions`, and `artifacts`. The decisions are the teaching surface. They show where the harness allowed low-risk work, denied an unsafe route, escalated an action for human approval, warned about drift, quarantined hostile context, or preserved evidence for replay. The artifacts show the state that would matter in production: a delegation chain, checkpoint, memory ledger entry, trace envelope, queue state, lineage record, or compliance hash.
 
 Each chapter also stores an actual captured run under `chapters/chXX/LabResult/`. Those folders contain the parsed `result.json`, raw `stdout.txt`, raw `stderr.txt`, and a short README so instructors can compare expected evidence with a fresh local run. Each captured `LabResult/` folder is committed with the chapter so instructors can compare expected evidence with a fresh local run.
+
+## Reference architecture
+
+Before the ten chapters, the repository supplies one request path. `harnesslab/pipeline.py` runs a request through seven stages — model invocation, tool selection, authorization, execution, observation, state updates, termination — using the same core primitives the chapter labs use. Each stage records one decision; the pipeline stops at the first denial or escalation and seals the run as evidence. Run it with `python -m harnesslab.cli pipeline`: one benign request executes end to end and checkpoints, a privileged vault read outside the intent contract is denied at authorization, and a poisoned memory write executes as a tool call but is denied by the memory gate at state updates.
+
+The model is a `ModelAdapter` (`harnesslab/adapters.py`). In the labs it is a `ScriptedModel`: a deterministic stand-in that returns planned calls in order, so the adapter seam is exercised without a model API, a network call, or a secret. A production adapter implements the same protocol against a real model gateway. The proposal is data, not authority — every call it returns still passes the gateway, the intent contract, the budget, and the credential broker.
+
+## Implementation boundaries
+
+Four boundaries connect the security patterns to implementation. Each one has a home in this repository:
+
+| Boundary | What it enforces | Where it lives |
+|---|---|---|
+| Tool contracts | A tool call carries its purpose, scope, and risk — nothing else runs | `ToolSpec` + `ToolGateway` in `harnesslab/core.py`; every lab call passes the gateway |
+| Model adapters | The harness, not the model, decides what a model call may carry | `ModelAdapter` + `ScriptedModel` in `harnesslab/adapters.py`; the pipeline's stage 1 |
+| Extension supply-chain | No extension runs without review, pinning, and a trust tier | `ExtensionRegistry` in `harnesslab/extensions.py`; unpinned, unreviewed, or unknown extensions are denied at load |
+| Protocol boundaries | Credentials and calls are audience-bound at the system edge | `CredentialBroker` in `harnesslab/core.py`; short-lived audience-bound credentials, verified before authorization |
+
+## Measured adversarial results
+
+The repository measures its own claims. `python -m harnesslab.cli measure` runs four adversarial scenarios — poisoned context (ch05), unauthorized memory write (ch06), resume after credentials expired (ch03), and an external action that cannot simply be rolled back (ch08) — and reports task completion, harness latency, and human review for each. Latency is the harness `run()` median over 20 in-process runs, interpreter startup excluded. Measured on 2026-11-11: all four scenarios PASS with score 1.000, latency 0.2–1.8 ms median, and 1 escalation across 66 decisions — three of the four scenarios needed zero human review. Exact medians vary by machine; the command is the source of truth, re-run it to reproduce the numbers.
 
 ## Chapter Map
 
