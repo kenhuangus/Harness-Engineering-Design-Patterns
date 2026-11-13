@@ -7,6 +7,7 @@ from harnesslab.adapters import ScriptedModel
 from harnesslab.core import (
     ActionRisk,
     CapabilityBudget,
+    Credential,
     DataClass,
     Decision,
     Harness,
@@ -16,7 +17,7 @@ from harnesslab.core import (
 from harnesslab.pipeline import RequestPipeline, demo, stable_id
 
 
-def _setup() -> tuple[Harness, object, IntentContract, CapabilityBudget]:
+def _setup() -> tuple[Harness, Credential, IntentContract, CapabilityBudget]:
     harness = Harness()
     credential = harness.broker.issue("pipeline-agent", "internal-ticketing", 3600, ("pipeline-agent",))
     contract = IntentContract(

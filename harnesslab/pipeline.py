@@ -3,7 +3,7 @@
 A request enters the harness and travels, in order: model invocation, tool
 selection, authorization, execution, observation, state updates, termination.
 Each stage is a place a control sits — and a place it can fail. The pipeline
-records one decision per stage, stops at the first denial or escalation, and
+records every stage decision, stops at the first denial or escalation, and
 seals the run as evidence. Nothing executes before authorization, and no
 state update happens without the memory gate.
 
@@ -19,7 +19,7 @@ import json
 import time
 from dataclasses import dataclass, field
 
-from .adapters import ModelAdapter
+from .adapters import ModelAdapter, ScriptedModel
 from .core import (
     ActionRisk,
     CapabilityBudget,
@@ -29,6 +29,7 @@ from .core import (
     Harness,
     IntentContract,
     PolicyDecision,
+    ToolCall,
     Tracer,
     TrustTier,
     stable_id,
@@ -209,9 +210,6 @@ def demo() -> list[PipelineResult]:
     authorization. Hostile 2: a memory write carrying a poisoned instruction
     — the tool call is allowed, but the memory gate denies the state update.
     """
-    from .adapters import ScriptedModel
-    from .core import ToolCall
-
     harness = Harness()
     credential = harness.broker.issue("pipeline-agent", "internal-ticketing", 3600, ("pipeline-agent",))
     contract = _demo_contract()
