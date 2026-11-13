@@ -615,10 +615,15 @@ def looks_like_secret(value: str) -> bool:
     return any(marker in lowered for marker in markers)
 
 
-def score_from_decisions(decisions: Iterable[PolicyDecision]) -> float:
-    items = list(decisions)
+def score_from_checks(checks: Iterable[bool]) -> float:
+    """Fraction of a scenario's expected outcomes that held; 0.0 with no checks.
+
+    Every check is a concrete claim about what the harness did (a poisoned
+    write was denied, a credential was revoked, an egress was blocked). A
+    score below 1.0 means a control failed; 1.0 means every expectation held.
+    """
+    items = [bool(check) for check in checks]
     if not items:
         return 0.0
-    acceptable = sum(1 for item in items if item.decision in {Decision.ALLOW, Decision.DENY, Decision.ESCALATE, Decision.WARN, Decision.REWRITE})
-    return round(acceptable / len(items), 3)
+    return round(sum(items) / len(items), 3)
 

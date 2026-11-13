@@ -33,6 +33,7 @@ Reference architecture and measurement contracts (added 2026-11-11):
 13. Model adapters implement the `ModelAdapter` protocol in `harnesslab/adapters.py`. The labs ship only the deterministic `ScriptedModel`; no live model call is permitted in a lab.
 14. Extensions are admitted only through `ExtensionRegistry` in `harnesslab/extensions.py`: pinned version, human review, and a trust tier, or the load is denied.
 15. `python -m harnesslab.cli measure` reproduces the four adversarial scenarios (ch03, ch05, ch06, ch08) and reports completion, latency, and escalations; the reported numbers are measurements, not constants, and exact medians vary by machine.
+16. The lab score is the fraction of the scenario's own expected outcomes that held (`score_from_checks` in `harnesslab/core.py`), computed from the same checks that determine `passed`. A score must never be derived from decision types alone: every decision value is a legitimate policy outcome, so a scorer that counts decision types cannot move and measures nothing.
 
 The public Python contract is:
 

@@ -22,7 +22,7 @@ from harnesslab.core import (
     PolicyDecision,
     ToolCall,
     TrustTier,
-    score_from_decisions,
+    score_from_checks,
     stable_id,
 )
 
@@ -196,7 +196,6 @@ def run() -> LabResult:
         egress_decision,
         pause_decision,
     ]
-    score = score_from_decisions(decisions)
     artifacts = {
         "profile": profile_artifact,
         "released_context": [_context_summary(item) for item in assembly.released],
@@ -252,7 +251,7 @@ def run() -> LabResult:
         chapter="ch05",
         title="Context: Trust Tiers, Provenance, and Context-Poisoning Containment",
         passed=all(expected),
-        score=score,
+        score=score_from_checks(expected),
         summary=(
             "Selected the high-assurance context profile, released only fresh trusted "
             "context, isolated external material, persisted quarantine evidence, "

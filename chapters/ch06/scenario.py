@@ -10,7 +10,7 @@ from harnesslab.core import (
     MemoryRecord,
     PolicyDecision,
     TrustTier,
-    score_from_decisions,
+    score_from_checks,
     stable_id,
 )
 
@@ -259,7 +259,7 @@ def run() -> LabResult:
         chapter="ch06",
         title="Memory: State Firewall, Ledger, and Forgetting",
         passed=passed,
-        score=score_from_decisions(decisions),
+        score=score_from_checks(expected_outcomes.values()),
         summary=summary,
         decisions=decisions,
         artifacts=artifacts,

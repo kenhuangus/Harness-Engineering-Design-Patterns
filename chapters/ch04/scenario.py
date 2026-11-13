@@ -12,7 +12,7 @@ from harnesslab.core import (
     LabResult,
     PolicyDecision,
     ToolCall,
-    score_from_decisions,
+    score_from_checks,
 )
 
 
@@ -259,22 +259,23 @@ def run() -> LabResult:
     for item in decisions:
         counts[item.decision.value] += 1
 
-    passed = (
-        counts[Decision.ALLOW.value] >= 8
-        and counts[Decision.WARN.value] >= 1
-        and counts[Decision.DENY.value] >= 3
-        and counts[Decision.ESCALATE.value] >= 1
-        and counts[Decision.REWRITE.value] >= 1
-        and rewritten_call is not None
-        and mismatched_contract is None
-        and notice_contract is not None
-        and notice_evidence_decision is not None
-        and notice_evidence_decision.allowed
-        and notice_verify_decision is not None
-        and notice_verify_decision.allowed
-        and notice_gateway_decision is not None
-        and notice_gateway_decision.allowed
-    )
+    checks = [
+        counts[Decision.ALLOW.value] >= 8,
+        counts[Decision.WARN.value] >= 1,
+        counts[Decision.DENY.value] >= 3,
+        counts[Decision.ESCALATE.value] >= 1,
+        counts[Decision.REWRITE.value] >= 1,
+        rewritten_call is not None,
+        mismatched_contract is None,
+        notice_contract is not None,
+        notice_evidence_decision is not None,
+        notice_evidence_decision.allowed,
+        notice_verify_decision is not None,
+        notice_verify_decision.allowed,
+        notice_gateway_decision is not None,
+        notice_gateway_decision.allowed,
+    ]
+    passed = all(checks)
 
     artifacts = {
         "contracts": [
@@ -322,7 +323,7 @@ def run() -> LabResult:
         chapter="ch04",
         title=TITLE,
         passed=passed,
-        score=score_from_decisions(decisions),
+        score=score_from_checks(checks),
         summary=(
             "Intent contracts constrained tools, data, risk, evidence, resume state, and reauthorization so "
             "the agent could continue only under the currently approved purpose."

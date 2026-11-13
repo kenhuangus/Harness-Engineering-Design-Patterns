@@ -5,7 +5,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass
 from typing import Any
 
-from harnesslab.core import Decision, LabResult, PolicyDecision, score_from_decisions
+from harnesslab.core import Decision, LabResult, PolicyDecision, score_from_checks
 
 
 @dataclass(frozen=True)
@@ -546,13 +546,19 @@ def run() -> LabResult:
     }
     unsafe_retry_blocked = any("unsafe_retry_blocked" in decision.controls for decision in decisions)
     quota_escalated = any(decision.decision == Decision.ESCALATE and "quota" in decision.controls for decision in decisions)
-    passed = required_controls.issubset(controls) and contained and unsafe_retry_blocked and quota_escalated
+    checks = [
+        required_controls.issubset(controls),
+        contained,
+        unsafe_retry_blocked,
+        quota_escalated,
+    ]
+    passed = all(checks)
 
     return LabResult(
         chapter="ch09",
         title="Scalability: Fleet Coordination Without Cascading Failure",
         passed=passed,
-        score=score_from_decisions(decisions),
+        score=score_from_checks(checks),
         summary=(
             "Fleet coordination exercised tenant bulkheads, queues, quotas, rate limits, "
             "idempotent retries, compromised-worker containment, and long-running capacity governance."

@@ -25,7 +25,7 @@ from harnesslab.core import (
     ToolCall,
     ToolSpec,
     default_tools,
-    score_from_decisions,
+    score_from_checks,
     stable_id,
 )
 
@@ -449,7 +449,7 @@ def run() -> LabResult:
         chapter=CHAPTER,
         title=TITLE,
         passed=passed,
-        score=score_from_decisions(decisions) if passed else 0.0,
+        score=score_from_checks(control_checks.values()),
         summary=(
             "Graduated autonomy allowed low-risk work, queued supervised actions, "
             "blocked budget exhaustion and non-waivable secret access, renewed an "

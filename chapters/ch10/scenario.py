@@ -16,7 +16,7 @@ from harnesslab.core import (
     PolicyDecision,
     ToolCall,
     TrustTier,
-    score_from_decisions,
+    score_from_checks,
     stable_id,
 )
 
@@ -512,21 +512,22 @@ def run() -> LabResult:
         "erasure",
         "compliance_evidence",
     }
-    passed = (
-        allowed >= 10
-        and denied >= 4
-        and escalated >= 1
-        and warned == 0
-        and len(harness.governance.lineage) >= 4
-        and bool(trace.tombstones())
-        and required_decision_controls.issubset(observed_controls)
-    )
+    checks = [
+        allowed >= 10,
+        denied >= 4,
+        escalated >= 1,
+        warned == 0,
+        len(harness.governance.lineage) >= 4,
+        bool(trace.tombstones()),
+        required_decision_controls.issubset(observed_controls),
+    ]
+    passed = all(checks)
 
     return LabResult(
         chapter="ch10",
         title="Data Governance: Classification-Aware Tools, Egress, and Compliance",
         passed=passed,
-        score=score_from_decisions(decisions),
+        score=score_from_checks(checks),
         summary=(
             "Chapter 10 routes labeled data through approved model and tool profiles, blocks unsafe egress "
             "and residency drift, escalates secret leakage, persists labels across resume, and proves erasure "

@@ -14,7 +14,7 @@ from harnesslab.core import (
     PolicyDecision,
     ToolCall,
     TrustTier,
-    score_from_decisions,
+    score_from_checks,
     stable_id,
 )
 
@@ -360,23 +360,24 @@ def run() -> LabResult:
     evidence_verified = _verify_ledger(evidence)
     interrupt_actions = {"pause", "block", "kill"}
     evidenced_interrupts = interrupt_actions.issubset({entry["action"] for entry in evidence if entry.get("hash")})
-    passed = (
-        REQUIRED_CONTROLS.issubset(controls)
-        and replay_matches
-        and evidence_verified
-        and evidenced_interrupts
-        and expired_before_final
-        and child_run_id in harness.runtime.killed
-        and run_id not in harness.runtime.paused
-        and memory_record.deleted
-        and not state["remaining"]
-    )
+    checks = [
+        REQUIRED_CONTROLS.issubset(controls),
+        replay_matches,
+        evidence_verified,
+        evidenced_interrupts,
+        expired_before_final,
+        child_run_id in harness.runtime.killed,
+        run_id not in harness.runtime.paused,
+        memory_record.deleted,
+        not state["remaining"],
+    ]
+    passed = all(checks)
 
     return LabResult(
         chapter="ch08",
         title="Runtime Steering: Intervention, Policy Injection, and Safe Rollback",
         passed=passed,
-        score=score_from_decisions(decisions),
+        score=score_from_checks(checks),
         summary=(
             "Runtime steering observed a long-running run, warned on hostile context, paused and blocked unsafe output, "
             "killed a retrying subtask, recovered from checkpoint, replayed evidence, compensated with safe rollback, "

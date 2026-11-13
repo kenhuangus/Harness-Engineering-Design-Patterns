@@ -14,7 +14,7 @@ from harnesslab.core import (
     PolicyDecision,
     TaskIdentity,
     ToolCall,
-    score_from_decisions,
+    score_from_checks,
     stable_id,
 )
 
@@ -288,20 +288,20 @@ def run() -> LabResult:
         "resource_scope",
         "risk_boundary",
     }
-    passed = (
-        allowed >= 15
-        and denied >= 5
-        and warned >= 1
-        and escalated >= 1
-        and required_controls.issubset(controls)
-        and score_from_decisions(decisions) >= 0.8
-    )
+    checks = [
+        allowed >= 15,
+        denied >= 5,
+        warned >= 1,
+        escalated >= 1,
+        required_controls.issubset(controls),
+    ]
+    passed = all(checks)
 
     return LabResult(
         chapter="ch03",
         title=TITLE,
         passed=passed,
-        score=score_from_decisions(decisions),
+        score=score_from_checks(checks),
         summary=(
             "Per-agent and per-task identities issued short-lived audience-bound credentials, "
             "preserved delegation chains, revoked stale grants, rotated credentials across pause/resume, "

@@ -23,7 +23,7 @@ from harnesslab.core import (
     PolicyDecision,
     ToolCall,
     TrustTier,
-    score_from_decisions,
+    score_from_checks,
     stable_id,
 )
 
@@ -183,8 +183,15 @@ def run() -> LabResult:
     runtime_recovered = resumed_state == checkpoint_state and checkpoint.checkpoint_id.startswith("ckpt_")
     hill_climb_governed = hill_climb["final_score"] >= 0.9 and hill_climb["rejected_neighbors"]
 
-    passed = safe_path_allowed and unsafe_blocked and runtime_recovered and hill_climb_governed and bool(quarantined)
-    score = round((score_from_decisions(decisions) + hill_climb["final_score"]) / 2, 3)
+    checks = [
+        safe_path_allowed,
+        unsafe_blocked,
+        runtime_recovered,
+        hill_climb_governed,
+        bool(quarantined),
+    ]
+    passed = all(checks)
+    score = round((score_from_checks(checks) + hill_climb["final_score"]) / 2, 3)
 
     artifacts = {
         "unsafe_project": unsafe_project,
